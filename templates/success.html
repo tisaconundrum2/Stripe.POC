@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Payment Successful – TokenHub{% endblock %}
+{% block content %}
+<div class="auth-card result-card">
+  <div class="result-icon">🎉</div>
+  <h2>Payment Successful!</h2>
+  <p>Your token budget has been topped up with <strong>50,000 tokens</strong>. You're ready to go!</p>
+  <a class="btn btn-primary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</div>
+{% endblock %}

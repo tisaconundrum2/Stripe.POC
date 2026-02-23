@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Admin – TokenHub{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    /* ---- Admin-specific overrides ---- */
+    :root { --primary: #f59e0b; --primary-dark: #d97706; }
+
+    .admin-layout {
+      display: flex;
+      min-height: calc(100vh - 57px);
+    }
+
+    /* Sidebar */
+    .admin-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+    }
+    .admin-sidebar h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .admin-sidebar a {
+      display: block;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .admin-sidebar a:hover,
+    .admin-sidebar a.active {
+      background: var(--surface2);
+      color: var(--text);
+      text-decoration: none;
+    }
+    .admin-sidebar a .icon { margin-right: 0.5rem; }
+
+    /* Main content area */
+    .admin-main {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .admin-badge {
+      display: inline-block;
+      background: var(--primary);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    /* Admin stat cards */
+    .admin-stats { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .admin-stat {
+      flex: 1 1 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+    .admin-stat .value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .admin-stat .label { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* Admin table */
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .admin-table th, .admin-table td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .admin-table th { color: var(--text-muted); font-weight: 600; }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: var(--surface2); }
+
+    .tag { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 4px; }
+    .tag-admin { background: #f59e0b22; color: #f59e0b; }
+    .tag-client { background: #6c63ff22; color: #6c63ff; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="navbar-brand" href="{{ url_for('index') }}">⚡ TokenHub <span class="admin-badge">Admin</span></a>
+    <div class="navbar-links">
+      <a href="{{ url_for('admin_dashboard') }}">Overview</a>
+      <a href="{{ url_for('admin_users') }}">Users</a>
+      <a href="{{ url_for('dashboard') }}">Client Portal</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <h3>Admin Portal</h3>
+      <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_dashboard' }}">
+        <span class="icon">📊</span>Overview
+      </a>
+      <a href="{{ url_for('admin_users') }}" class="{{ 'active' if request.endpoint in ('admin_users','admin_edit_user') }}">
+        <span class="icon">👥</span>Users
+      </a>
+      <hr style="border-color:var(--border);margin:1rem 0;">
+      <a href="{{ url_for('dashboard') }}"><span class="icon">↩</span>Client Portal</a>
+      <a href="{{ url_for('logout') }}"><span class="icon">🚪</span>Logout</a>
+    </aside>
+
+    <main class="admin-main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+{% block title %}Admin Overview – TokenHub{% endblock %}
+{% block content %}
+
+<h1 style="margin-bottom:1.5rem;">Overview</h1>
+
+<div class="admin-stats">
+  <div class="admin-stat">
+    <div class="value">{{ "{:,}".format(total_users) }}</div>
+    <div class="label">Registered Users</div>
+  </div>
+  <div class="admin-stat">
+    <div class="value">{{ "{:,}".format(total_tokens_sold) }}</div>
+    <div class="label">Total Tokens Allocated</div>
+  </div>
+  <div class="admin-stat">
+    <div class="value">{{ "{:,}".format(total_tokens_used) }}</div>
+    <div class="label">Total Tokens Consumed</div>
+  </div>
+  <div class="admin-stat">
+    {% set pct = ((total_tokens_used / total_tokens_sold * 100) | round(1)) if total_tokens_sold > 0 else 0 %}
+    <div class="value">{{ pct }}%</div>
+    <div class="label">Platform-wide Usage</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Recently Registered Users</h2>
+  {% if recent_users %}
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Token Budget</th>
+        <th>Joined (UTC)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in recent_users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>
+          {% if u.is_admin %}
+            <span class="tag tag-admin">Admin</span>
+          {% else %}
+            <span class="tag tag-client">Client</span>
+          {% endif %}
+        </td>
+        <td>{{ "{:,}".format(u.token_budget) }}</td>
+        <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+        <td>
+          <a href="{{ url_for('admin_edit_user', user_id=u.id) }}" class="btn btn-secondary" style="padding:0.25rem 0.75rem;font-size:0.8rem;">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p style="margin-top:1rem;">
+    <a href="{{ url_for('admin_users') }}" class="btn btn-primary" style="font-size:0.85rem;">View All Users →</a>
+  </p>
+  {% else %}
+    <p class="hint">No users yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

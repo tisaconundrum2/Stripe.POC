@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}TokenHub – Manage API Tokens{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>⚡ TokenHub</h1>
+  <p class="hero-sub">A simple User Management System to create API tokens, track their usage, and refill your budget via Stripe.</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="{{ url_for('register') }}">Get Started</a>
+    <a class="btn btn-secondary" href="{{ url_for('login') }}">Sign In</a>
+  </div>
+</section>
+
+<section class="features">
+  <div class="feature-card">
+    <div class="feature-icon">🔑</div>
+    <h3>API Token Management</h3>
+    <p>Generate secure, revocable API keys instantly. Each key is cryptographically random and scoped to your account.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">📊</div>
+    <h3>Usage Analytics</h3>
+    <p>Visualise your token consumption over the last 30 days with an interactive bar chart updated in real time.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">💳</div>
+    <h3>Stripe Top-Up</h3>
+    <p>Running low? Purchase additional tokens directly from your dashboard via a secure Stripe Checkout session.</p>
+  </div>
+</section>
+{% endblock %}

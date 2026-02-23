@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+{% block title %}Edit {{ user.username }} – Admin – TokenHub{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:1.5rem;">
+  <a href="{{ url_for('admin_users') }}" style="color:var(--text-muted);font-size:0.88rem;">← Back to Users</a>
+</div>
+
+<h1 style="margin-bottom:1.5rem;">Edit User: <em>{{ user.username }}</em></h1>
+
+<div class="card" style="max-width:480px;">
+  <form method="POST">
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" class="form-control" value="{{ user.username }}" disabled />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="text" class="form-control" value="{{ user.email }}" disabled />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="token_budget">Token Budget</label>
+      <input type="number" id="token_budget" name="token_budget"
+             class="form-control" value="{{ user.token_budget }}" min="0" required />
+      <p class="hint">Currently used: {{ "{:,}".format(user.tokens_used()) }} tokens</p>
+    </div>
+
+    <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;margin-top:0.5rem;">
+      <input type="checkbox" id="is_admin" name="is_admin"
+             {{ 'checked' if user.is_admin }} style="width:1.1rem;height:1.1rem;cursor:pointer;" />
+      <label for="is_admin" style="cursor:pointer;margin:0;">Grant Admin Privileges</label>
+    </div>
+
+    <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

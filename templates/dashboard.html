@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – TokenHub{% endblock %}
+{% block content %}
+
+{% if user.is_admin %}
+<div class="alert" style="background:#f59e0b18;border:1px solid #f59e0b44;color:#f59e0b;display:flex;align-items:center;justify-content:space-between;">
+  <span>⚙ You have <strong>admin privileges</strong>.</span>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn" style="background:#f59e0b;color:#000;padding:0.35rem 1rem;font-size:0.85rem;">Open Admin Portal →</a>
+</div>
+{% endif %}
+
+<!-- Stats row -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-value">{{ "{:,}".format(user.token_budget) }}</div>
+    <div class="stat-label">Total Budget</div>
+  </div>
+  <div class="stat-card stat-card--used">
+    <div class="stat-value">{{ "{:,}".format(user.tokens_used()) }}</div>
+    <div class="stat-label">Tokens Used</div>
+  </div>
+  <div class="stat-card stat-card--remaining">
+    <div class="stat-value">{{ "{:,}".format(user.tokens_remaining()) }}</div>
+    <div class="stat-label">Remaining</div>
+  </div>
+</div>
+
+<!-- Budget progress bar -->
+<div class="budget-bar-wrap">
+  {% set pct = [((user.tokens_used() / user.token_budget) * 100) | round(1), 100] | min %}
+  <div class="budget-bar-bg">
+    <div class="budget-bar-fill {% if pct > 80 %}budget-bar-fill--warn{% endif %}"
+         style="width: {{ pct }}%"></div>
+  </div>
+  <span class="budget-bar-label">{{ pct }}% used</span>
+</div>
+
+<!-- Usage chart -->
+<div class="card">
+  <h2>Token Usage – Last 30 Days</h2>
+  <canvas id="usageChart" style="width:100%;height:260px;display:block;"></canvas>
+</div>
+
+<!-- API key management -->
+<div class="card">
+  <h2>🔑 Your API Key</h2>
+  {% if user.api_key %}
+    <div class="api-key-row">
+      <input type="text" id="apiKeyDisplay" class="form-control api-key-input"
+             value="{{ user.api_key }}" readonly />
+      <button class="btn btn-secondary" onclick="copyKey()">Copy</button>
+    </div>
+    <p class="hint">Use this key in the <code>X-API-KEY</code> header when calling <code>POST /api/process</code>.</p>
+    <form method="POST" action="{{ url_for('generate_api_key') }}" style="display:inline;">
+      <button type="submit" class="btn btn-warning">Regenerate Key</button>
+    </form>
+    <form method="POST" action="{{ url_for('revoke_api_key') }}" style="display:inline;">
+      <button type="submit" class="btn btn-danger">Revoke Key</button>
+    </form>
+  {% else %}
+    <p>You don't have an API key yet.</p>
+    <form method="POST" action="{{ url_for('generate_api_key') }}">
+      <button type="submit" class="btn btn-primary">Generate API Key</button>
+    </form>
+  {% endif %}
+</div>
+
+<!-- Top-up with Stripe -->
+<div class="card">
+  <h2>💳 Refill Token Budget</h2>
+  <p>Purchase <strong>50,000 additional tokens</strong> via a secure Stripe Checkout session.</p>
+  <form method="POST" action="{{ url_for('create_checkout_session') }}">
+    <button type="submit" class="btn btn-primary">Buy 50,000 Tokens</button>
+  </form>
+  {% if not config.get('STRIPE_PRICE_ID') and not request.environ.get('STRIPE_PRICE_ID') %}
+    <p class="hint warn">⚠ <code>STRIPE_PRICE_ID</code> is not configured – payments are disabled until you add it to <code>.env</code>.</p>
+  {% endif %}
+</div>
+
+<!-- Recent usage table -->
+<div class="card">
+  <h2>Recent API Calls</h2>
+  {% if user.usages %}
+    <table class="usage-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Timestamp (UTC)</th>
+          <th>Prompt Tokens</th>
+          <th>Completion Tokens</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in user.usages | sort(attribute='timestamp', reverse=True) | list %}
+          {% if loop.index <= 20 %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ u.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ u.prompt_tokens }}</td>
+            <td>{{ u.completion_tokens }}</td>
+            <td><strong>{{ u.total_tokens }}</strong></td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="hint">No API calls yet. Use your key to call <code>POST /api/process</code>.</p>
+  {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  const CHART_LABELS = {{ chart_labels | tojson }};
+  const CHART_DATA   = {{ chart_data   | tojson }};
+  initUsageChart(CHART_LABELS, CHART_DATA);
+
+  function copyKey() {
+    const el = document.getElementById('apiKeyDisplay');
+    el.select();
+    el.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(el.value).then(() => {
+      alert('API key copied to clipboard!');
+    });
+  }
+</script>
+{% endblock %}
