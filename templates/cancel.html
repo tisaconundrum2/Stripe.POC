@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Payment Cancelled – TokenHub{% endblock %}
+{% block content %}
+<div class="auth-card result-card">
+  <div class="result-icon">❌</div>
+  <h2>Payment Cancelled</h2>
+  <p>Your payment was not completed. No charges were made.</p>
+  <a class="btn btn-secondary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</div>
+{% endblock %}

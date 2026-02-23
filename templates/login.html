@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Login – TokenHub{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h2>Sign in</h2>
+  <form method="POST" action="{{ url_for('login') }}">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" class="form-control" required autofocus />
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+  </form>
+  <p class="auth-switch">Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
+</div>
+{% endblock %}
