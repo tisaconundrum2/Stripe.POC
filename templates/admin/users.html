@@ -1,0 +1,73 @@
+{% extends "admin/base.html" %}
+{% block title %}Users – Admin – TokenHub{% endblock %}
+{% block content %}
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+  <h1>All Users</h1>
+  <span style="color:var(--text-muted);font-size:0.9rem;">{{ users | length }} total</span>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden;">
+  {% if users %}
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Budget</th>
+        <th>Used</th>
+        <th>Remaining</th>
+        <th>API Key</th>
+        <th>Joined (UTC)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>
+          {% if u.is_admin %}
+            <span class="tag tag-admin">Admin</span>
+          {% else %}
+            <span class="tag tag-client">Client</span>
+          {% endif %}
+        </td>
+        <td>{{ "{:,}".format(u.token_budget) }}</td>
+        <td>{{ "{:,}".format(u.tokens_used()) }}</td>
+        <td>{{ "{:,}".format(u.tokens_remaining()) }}</td>
+        <td>
+          {% if u.api_key %}
+            <code style="font-size:0.75rem;">{{ u.api_key[:12] }}…</code>
+          {% else %}
+            <span style="color:var(--text-muted)">—</span>
+          {% endif %}
+        </td>
+        <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+        <td style="white-space:nowrap;">
+          <a href="{{ url_for('admin_edit_user', user_id=u.id) }}"
+             class="btn btn-secondary"
+             style="padding:0.25rem 0.65rem;font-size:0.78rem;">Edit</a>
+          {% if u.id != current_user.id %}
+          <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}"
+                style="display:inline;"
+                onsubmit="return confirm('Delete {{ u.username }}? This cannot be undone.');">
+            <button type="submit" class="btn btn-danger"
+                    style="padding:0.25rem 0.65rem;font-size:0.78rem;">Delete</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="hint" style="padding:1.5rem;">No users registered yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

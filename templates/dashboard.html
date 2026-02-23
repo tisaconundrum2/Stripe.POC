@@ -2,6 +2,13 @@
 {% block title %}Dashboard – TokenHub{% endblock %}
 {% block content %}
 
+{% if user.is_admin %}
+<div class="alert" style="background:#f59e0b18;border:1px solid #f59e0b44;color:#f59e0b;display:flex;align-items:center;justify-content:space-between;">
+  <span>⚙ You have <strong>admin privileges</strong>.</span>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn" style="background:#f59e0b;color:#000;padding:0.35rem 1rem;font-size:0.85rem;">Open Admin Portal →</a>
+</div>
+{% endif %}
+
 <!-- Stats row -->
 <div class="stats-row">
   <div class="stat-card">

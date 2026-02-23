@@ -52,6 +52,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     api_key = db.Column(db.String(64), unique=True, nullable=True)
     token_budget = db.Column(db.Integer, default=10000, nullable=False)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     usages = db.relationship("TokenUsage", backref="user", lazy=True)
 
@@ -84,6 +85,44 @@ with app.app_context():
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+
+# ---------------------------------------------------------------------------
+# Admin guard decorator
+# ---------------------------------------------------------------------------
+
+from functools import wraps
+from flask import abort
+
+def admin_required(f):
+    """Decorator that requires the current user to be authenticated and is_admin=True."""
+    @wraps(f)
+    @login_required
+    def decorated(*args, **kwargs):
+        if not current_user.is_admin:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ---------------------------------------------------------------------------
+# CLI: flask promote-admin <username>
+# ---------------------------------------------------------------------------
+
+import click
+
+@app.cli.command("promote-admin")
+@click.argument("username")
+def promote_admin(username):
+    """Grant admin privileges to an existing user."""
+    with app.app_context():
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            click.echo(f"Error: user '{username}' not found.", err=True)
+            raise SystemExit(1)
+        user.is_admin = True
+        db.session.commit()
+        click.echo(f"✅  '{username}' is now an admin.")
 
 
 # ---------------------------------------------------------------------------
@@ -338,6 +377,67 @@ def stripe_webhook():
                 db.session.commit()
 
     return jsonify({"status": "success"})
+
+
+# ---------------------------------------------------------------------------
+# Admin portal
+# ---------------------------------------------------------------------------
+
+@app.route("/admin")
+@admin_required
+def admin_dashboard():
+    total_users = User.query.count()
+    total_tokens_sold = db.session.query(db.func.sum(User.token_budget)).scalar() or 0
+    total_tokens_used = db.session.query(db.func.sum(TokenUsage.total_tokens)).scalar() or 0
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+    return render_template(
+        "admin/dashboard.html",
+        total_users=total_users,
+        total_tokens_sold=total_tokens_sold,
+        total_tokens_used=total_tokens_used,
+        recent_users=recent_users,
+    )
+
+
+@app.route("/admin/users")
+@admin_required
+def admin_users():
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template("admin/users.html", users=users)
+
+
+@app.route("/admin/users/<int:user_id>/edit", methods=["GET", "POST"])
+@admin_required
+def admin_edit_user(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        abort(404)
+    if request.method == "POST":
+        new_budget = request.form.get("token_budget", "").strip()
+        make_admin = request.form.get("is_admin") == "on"
+        if new_budget.isdigit():
+            user.token_budget = int(new_budget)
+        user.is_admin = make_admin
+        db.session.commit()
+        flash(f"User '{user.username}' updated.", "success")
+        return redirect(url_for("admin_users"))
+    return render_template("admin/edit_user.html", user=user)
+
+
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_user(user_id):
+    user = db.session.get(User, user_id)
+    if not user:
+        abort(404)
+    if user.id == current_user.id:
+        flash("You cannot delete your own account.", "danger")
+        return redirect(url_for("admin_users"))
+    TokenUsage.query.filter_by(user_id=user.id).delete()
+    db.session.delete(user)
+    db.session.commit()
+    flash(f"User '{user.username}' deleted.", "warning")
+    return redirect(url_for("admin_users"))
 
 
 # ---------------------------------------------------------------------------
